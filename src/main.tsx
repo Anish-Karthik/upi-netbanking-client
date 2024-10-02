@@ -1,18 +1,21 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Root from "./routes/root";
-import SignUpPage from "./routes/auth/sign-up";
-import ErrorPage from "./error-page";
-import LoginPage from "./routes/auth/login";
-import AuthLayout from "./routes/auth/auth-layout";
 import { Toaster } from "react-hot-toast";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./components/AuthProvider";
+import ErrorPage from "./error-page";
+import "./index.css";
+import AuthLayout from "./routes/auth/auth-layout";
+import LoginPage from "./routes/auth/login";
+import SignUpPage from "./routes/auth/sign-up";
+import LandingPage from "./routes/Landing";
+import Dashboard from "./routes/protected/Dashboard";
+import HomeLayoutPage from "./routes/protected/home-layout";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <LandingPage />,
     errorElement: <ErrorPage />,
   },
   {
@@ -32,11 +35,25 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: "/",
+    element: <HomeLayoutPage />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/dashboard",
+        element: <Dashboard />,
+        errorElement: <ErrorPage />,
+      },
+    ],
+  }
 ]);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
-    <Toaster />
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <Toaster />
+    </AuthProvider>
   </StrictMode>
 );

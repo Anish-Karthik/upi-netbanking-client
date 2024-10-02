@@ -75,17 +75,20 @@ export default function LoginForm({ className, ...props }: LoginFormProps) {
   const emailOrPhone = watch("emailOrPhone");
 
   React.useEffect(() => {
+    if (!form.formState.isDirty) return;
     if (emailOrPhone.includes("@")) {
       const parsed = email.safeParse(emailOrPhone);
       if (parsed.success && parsed.data !== undefined) {
         setValue("email", emailOrPhone);
         setValue("phone", null);
+        form.clearErrors("emailOrPhone");
       }
     } else if (emailOrPhone.match(/^\d+$/)) {
       const parsed = phone.safeParse(emailOrPhone);
       if (parsed.success && parsed.data !== undefined) {
         setValue("phone", emailOrPhone);
         setValue("email", null);
+        form.clearErrors("emailOrPhone");
       }
     } else {
       form.setError("emailOrPhone", {
@@ -113,7 +116,7 @@ export default function LoginForm({ className, ...props }: LoginFormProps) {
       const res = await auth.post("/login", reqObj);
       if (res.status) {
         toast.success("Logged in successfully");
-        navigate("/dashboard");
+        window.location.href = "/dashboard";
       }
       console.log(res.data);
     } catch (error: any) {
