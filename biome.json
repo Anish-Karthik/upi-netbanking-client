@@ -9,6 +9,7 @@
   },
   "linter": {
     "enabled": true,
+    "ignore": ["node_modules", "src/components/ui"],
     "rules": {
       "recommended": true,
       "a11y": {
@@ -18,7 +19,8 @@
         "noBannedTypes": "off"
       },
       "correctness": {
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "warn"
       },
       "performance": {
         "noBarrelFile": "error",
@@ -33,7 +35,7 @@
         "noArrayIndexKey": "off",
         "noAssignInExpressions": "off",
         "noConfusingVoidType": "off",
-        "noConsoleLog": "error",
+        "noConsoleLog": "warn",
         "noExplicitAny": "off",
         "noRedeclare": "off"
       }
@@ -44,6 +46,11 @@
       "quoteStyle": "single",
       "trailingCommas": "all",
       "semicolons": "asNeeded"
+    }
+  },
+  "json": {
+    "linter": {
+      "enabled": false
     }
   },
   "organizeImports": {

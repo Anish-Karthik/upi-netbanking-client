@@ -70,7 +70,6 @@ export default function LoginForm({ className, ...props }: LoginFormProps) {
     formState: { isSubmitting },
   } = form;
 
-  const navigate = useNavigate();
 
   const emailOrPhone = watch("emailOrPhone");
 
@@ -98,7 +97,7 @@ export default function LoginForm({ className, ...props }: LoginFormProps) {
       setValue("email", null);
       setValue("phone", null);
     }
-  }, [emailOrPhone, setValue]);
+  }, [emailOrPhone, setValue, form]);
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {

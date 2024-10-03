@@ -78,7 +78,7 @@ export default function ProfilePage() {
     if (userData) {
       form.reset(userData);
     }
-  }, [userData]);
+  }, [userData, form]);
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) =>

@@ -115,7 +115,7 @@ export default function AccountsPage() {
       });
       setIsCreateDialogOpen(false);
     },
-    onError: (error) => {
+    onError: (_error) => {
       toast({
         title: "Error",
         description: "Failed to create account. Please try again.",
@@ -141,7 +141,7 @@ export default function AccountsPage() {
       setIsEditDialogOpen(false);
       setEditingAccount(null);
     },
-    onError: (error) => {
+    onError: (_error) => {
       toast({
         title: "Error",
         description: "Failed to update account. Please try again.",
@@ -159,7 +159,7 @@ export default function AccountsPage() {
         description: "The account has been successfully closed.",
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       toast({
         title: "Error",
         description: "Failed to close account. Please try again.",
