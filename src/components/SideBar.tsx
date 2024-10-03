@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -10,7 +10,7 @@ import {
   Banknote as Bank,
   Menu,
   User2,
-  LucideIcon,
+  type LucideIcon,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 

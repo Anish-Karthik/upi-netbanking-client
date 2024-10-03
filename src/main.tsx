@@ -22,6 +22,7 @@ import Profile from "./routes/protected/profile";
 import Settings from "./routes/protected/settings";
 import Transactions from "./routes/protected/transactions";
 import Upi from "./routes/protected/upi";
+import { Toaster as ToastProvider } from './components/ui/toaster';
 
 const router = createBrowserRouter([
   {
@@ -103,6 +104,7 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <RouterProvider router={router} />
         <Toaster />
+        <ToastProvider />
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>

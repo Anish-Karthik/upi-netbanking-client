@@ -1,5 +1,5 @@
 import { api } from "@/lib/axios"
-import { UserData } from "@/routes/protected/profile";
+import type { UserData } from "@/routes/protected/profile";
 
 
 export const getProfile = async (userId: number): Promise<UserData> => {

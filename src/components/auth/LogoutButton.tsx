@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { logout } from "@/lib/auth";
-import React from "react";
+import type React from "react";
 
 const LogoutButton: React.FC = ({
   navigateTo = "/",

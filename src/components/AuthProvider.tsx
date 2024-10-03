@@ -1,5 +1,6 @@
 import { auth } from '@/lib/axios';
-import React, { createContext, useContext, useLayoutEffect, useState } from 'react';
+import type React from 'react';
+import { createContext, useContext, useLayoutEffect, useState } from 'react';
 
 // Type for the current user
 type SessionUser = {
