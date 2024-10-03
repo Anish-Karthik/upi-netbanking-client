@@ -1,3 +1,24 @@
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Edit, X, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/axios";
 import { useAuth } from "@/components/AuthProvider";
 import {
   CreateBankAccountForm,
@@ -7,38 +28,9 @@ import {
   EditBankAccountForm,
   type EditBankAccountFormValues,
 } from "@/components/accounts/EditBankAccountForm";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/axios";
+import { ConfirmActionDialog } from "@/components/accounts/ConfirmDialog";
 import { AccountType, type BankAccount, type Bank } from "@/types/account";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Edit, X } from "lucide-react";
-import { useState } from "react";
-import * as z from "zod";
-
-
-// Form schema
-const formSchema = z.object({
-  accountType: z.nativeEnum(AccountType),
-  bankId: z.number(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { Link } from "react-router-dom";
 
 // API functions
 const fetchAccounts = async (userId: number): Promise<BankAccount[]> => {
@@ -53,7 +45,7 @@ const fetchBanks = async (): Promise<Bank[]> => {
 
 const createAccount = async (
   userId: number,
-  data: FormValues
+  data: CreateBankAccountFormValues
 ): Promise<BankAccount> => {
   const response = await api.post(`/user/${userId}/accounts`, data);
   return response.data.data;
@@ -69,21 +61,24 @@ const updateAccount = async (
 };
 
 const closeAccount = async (userId: number, accNo: string): Promise<void> => {
-  await api.delete(`/user/${userId}/accounts/${accNo}`);
+  await api.post(`/user/${userId}/accounts/${accNo}/close`);
 };
 
-// Enums and interfaces (as before)
-// ...
-
-// API functions (as before)
-// ...
+const reopenAccount = async (userId: number, accNo: string): Promise<void> => {
+  await api.post(`/user/${userId}/accounts/${accNo}/reopen`);
+};
 
 export default function AccountsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(
     null
   );
+  const [confirmingAction, setConfirmingAction] = useState<{
+    account: BankAccount;
+    action: "close" | "reopen";
+  } | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -158,11 +153,33 @@ export default function AccountsPage() {
         title: "Account closed",
         description: "The account has been successfully closed.",
       });
+      setIsConfirmDialogOpen(false);
+      setConfirmingAction(null);
     },
     onError: (_error) => {
       toast({
         title: "Error",
         description: "Failed to close account. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reopenAccountMutation = useMutation({
+    mutationFn: (accNo: string) => reopenAccount(user!.id, accNo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts", user?.id] });
+      toast({
+        title: "Account reopened",
+        description: "The account has been successfully reopened.",
+      });
+      setIsConfirmDialogOpen(false);
+      setConfirmingAction(null);
+    },
+    onError: (_error) => {
+      toast({
+        title: "Error",
+        description: "Failed to reopen account. Please try again.",
         variant: "destructive",
       });
     },
@@ -183,8 +200,22 @@ export default function AccountsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleClose = (accNo: string) => {
-    closeAccountMutation.mutate(accNo);
+  const handleToggleAccountStatus = (account: BankAccount) => {
+    setConfirmingAction({
+      account,
+      action: account.status === "ACTIVE" ? "close" : "reopen",
+    });
+    setIsConfirmDialogOpen(true);
+  };
+
+  const confirmToggleAccountStatus = () => {
+    if (confirmingAction) {
+      if (confirmingAction.action === "close") {
+        closeAccountMutation.mutate(confirmingAction.account.accNo);
+      } else {
+        reopenAccountMutation.mutate(confirmingAction.account.accNo);
+      }
+    }
   };
 
   if (isLoading) {
@@ -246,10 +277,17 @@ export default function AccountsPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleClose(account.accNo)}
-                    disabled={closeAccountMutation.isPending}
+                    onClick={() => handleToggleAccountStatus(account)}
+                    disabled={
+                      closeAccountMutation.isPending ||
+                      reopenAccountMutation.isPending
+                    }
                   >
-                    <X className="h-4 w-4" />
+                    {account.status === "ACTIVE" ? (
+                      <X className="h-4 w-4" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </TableCell>
@@ -274,6 +312,31 @@ export default function AccountsPage() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmActionDialog
+        isOpen={isConfirmDialogOpen}
+        onClose={() => {
+          setIsConfirmDialogOpen(false);
+          setConfirmingAction(null);
+        }}
+        onConfirm={confirmToggleAccountStatus}
+        title={
+          confirmingAction?.action === "close"
+            ? "Close Account"
+            : "Reopen Account"
+        }
+        description={`Are you sure you want to ${
+          confirmingAction?.action
+        } this account?${
+          confirmingAction?.action === "close"
+            ? " This action cannot be undone."
+            : ""
+        }`}
+        confirmText={
+          confirmingAction?.action === "close"
+            ? "Close Account"
+            : "Reopen Account"
+        }
+      />
     </div>
   );
 }
