@@ -1,3 +1,4 @@
+import { useAuth } from '@/components/AuthProvider'
 import { SideBar } from '@/components/SideBar'
 import { TopBar } from '@/components/TopBar'
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -6,6 +7,12 @@ import { Outlet } from 'react-router-dom'
 
 export default function HomePageLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const { user, loading } = useAuth()
+  if (loading) return <div>Loading...</div>
+  if (!user) {
+    window.location.href = '/auth/login'
+    return null
+  }
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
