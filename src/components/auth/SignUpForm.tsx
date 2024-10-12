@@ -46,12 +46,12 @@ export function SignUpForm({ className, ...props }: UserAuthFormProps) {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      const res = await auth.post("/signup", data);
+      const res = await auth.post("/register", data);
       toast.success("Account created successfully");
       console.log(res);
       // Redirect to /auth/login
       navigate("/auth/login");
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to create account");
     }
   }

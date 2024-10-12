@@ -1,25 +1,7 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Edit, X, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/axios";
+import { closeAccount, createAccount, reopenAccount, updateAccount } from "@/api/accounts/mutation";
+import { fetchAccounts, fetchBanks } from "@/api/accounts/query";
 import { useAuth } from "@/components/AuthProvider";
+import { ConfirmActionDialog } from "@/components/accounts/ConfirmDialog";
 import {
   CreateBankAccountForm,
   type CreateBankAccountFormValues,
@@ -28,45 +10,30 @@ import {
   EditBankAccountForm,
   type EditBankAccountFormValues,
 } from "@/components/accounts/EditBankAccountForm";
-import { ConfirmActionDialog } from "@/components/accounts/ConfirmDialog";
-import { AccountType, type BankAccount, type Bank } from "@/types/account";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/axios";
+import { AccountType, type Bank, type BankAccount } from "@/types/account";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Edit, RefreshCw, X } from "lucide-react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-// API functions
-const fetchAccounts = async (userId: number): Promise<BankAccount[]> => {
-  const response = await api.get(`/user/${userId}/accounts`);
-  return response.data.data;
-};
-
-const fetchBanks = async (): Promise<Bank[]> => {
-  const response = await api.get("/banks");
-  return response.data.data;
-};
-
-const createAccount = async (
-  userId: number,
-  data: CreateBankAccountFormValues
-): Promise<BankAccount> => {
-  const response = await api.post(`/user/${userId}/accounts`, data);
-  return response.data.data;
-};
-
-const updateAccount = async (
-  userId: number,
-  accNo: string,
-  data: EditBankAccountFormValues
-): Promise<BankAccount> => {
-  const response = await api.put(`/user/${userId}/accounts/${accNo}`, data);
-  return response.data.data;
-};
-
-const closeAccount = async (userId: number, accNo: string): Promise<void> => {
-  await api.post(`/user/${userId}/accounts/${accNo}/close`);
-};
-
-const reopenAccount = async (userId: number, accNo: string): Promise<void> => {
-  await api.post(`/user/${userId}/accounts/${accNo}/reopen`);
-};
 
 export default function AccountsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
