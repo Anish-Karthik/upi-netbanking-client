@@ -4,7 +4,7 @@ import type { Transfer } from "@/types/transfer"
 import type { z } from "zod"
 
 // API functions
-export const fetchTransfers = async (userId: number): Promise<Transfer[]> => {
+export const fetchTransfers = async (): Promise<Transfer[]> => {
   const response = await api.get("/transfers")
   return response.data.data
 }

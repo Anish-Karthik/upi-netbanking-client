@@ -26,7 +26,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
-import { api } from '@/lib/axios'
 import { beneficiarySchema } from "@/schema/beneficiary"
 import type { Beneficiary } from "@/types/beneficiary"
 import { zodResolver } from '@hookform/resolvers/zod'

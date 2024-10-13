@@ -19,7 +19,7 @@ export default function TransfersPage() {
 
   const { data: transfers, isLoading: transfersLoading } = useQuery<Transfer[], Error>({
     queryKey: ['transfers', user?.id],
-    queryFn: () => user ? fetchTransfers(user.id) : Promise.reject("User ID is undefined"),
+    queryFn: () => user ? fetchTransfers() : Promise.reject("User ID is undefined"),
     enabled: !!user,
   });
 
