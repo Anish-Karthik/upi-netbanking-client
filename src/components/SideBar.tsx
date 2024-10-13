@@ -11,6 +11,7 @@ import {
   Menu,
   User2,
   type LucideIcon,
+  Coins,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
@@ -30,6 +31,7 @@ const routes: Route[] = [
   { name: "Beneficiaries", path: "/beneficiaries", icon: Users },
   { name: "Accounts", path: "/accounts", icon: Bank },
   { name: "Transactions", path: "/transactions", icon: Repeat },
+  { name: "Transfers", path: "/transfers", icon: Coins },
   { name: "Upi", path: "/upi", icon: FileText },
   { name: "Cards", path: "/cards", icon: CreditCard },
   { name: "Profile", path: "/profile", icon: User2 },

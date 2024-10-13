@@ -23,6 +23,7 @@ import Settings from "./routes/protected/settings";
 import Transactions from "./routes/protected/transactions";
 import Upi from "./routes/protected/upi";
 import { Toaster as ToastProvider } from './components/ui/toaster';
+import Transfers from './routes/protected/transfers';
 
 const router = createBrowserRouter([
   {
@@ -70,6 +71,11 @@ const router = createBrowserRouter([
       {
         path: "/transactions",
         element: <Transactions />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/transfers",
+        element: <Transfers />,
         errorElement: <ErrorPage />,
       },
       {
