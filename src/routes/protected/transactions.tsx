@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { ArrowDownIcon, ArrowUpIcon, Plus } from 'lucide-react'
-import { api } from '@/lib/axios'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { ArrowDownIcon, ArrowUpIcon, Plus } from "lucide-react";
+import { api } from "@/lib/axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -22,14 +22,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -37,10 +37,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/components/AuthProvider"
-import type { BankAccount } from "@/types/account"
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/components/AuthProvider";
+import type { BankAccount } from "@/types/account";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 
 // Enums
 enum TransactionType {
@@ -62,18 +71,18 @@ enum TransactionStatus {
 
 // Interfaces
 interface Transaction {
-  transactionId: number
-  accNo: string
-  userId: number
-  amount: number
-  transactionType: TransactionType
-  transactionStatus: TransactionStatus
-  byCardNo: string | null
-  upiId: string | null
-  startedAt: string | null
-  endedAt: string | null
-  referenceId: string | null
-  paymentMethod: PaymentMethod
+  transactionId: number;
+  accNo: string;
+  userId: number;
+  amount: number;
+  transactionType: TransactionType;
+  transactionStatus: TransactionStatus;
+  byCardNo: string | null;
+  upiId: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  referenceId: string | null;
+  paymentMethod: PaymentMethod;
 }
 
 interface UPI {
@@ -92,87 +101,106 @@ const transactionSchema = z.object({
   paymentMethod: z.nativeEnum(PaymentMethod),
   upiId: z.string().optional(),
   byCardNo: z.string().optional(),
-})
+});
 
 // API functions
 const fetchTransactions = async (accNo: string): Promise<Transaction[]> => {
-  const response = await api.get(`/accounts/${accNo}/transactions`)
-  return response.data.data
-}
+  const response = await api.get(`/accounts/${accNo}/transactions`);
+  return response.data.data;
+};
 
 const fetchAccounts = async (userId: number): Promise<BankAccount[]> => {
-  const response = await api.get(`/users/${userId}/accounts`)
-  return response.data.data
-}
+  const response = await api.get(`/users/${userId}/accounts`);
+  return response.data.data;
+};
 
-const createTransaction = async (data: z.infer<typeof transactionSchema> & { userId: number }): Promise<Transaction> => {
-  const response = await api.post(`/accounts/${data.accNo}/transactions`, data)
-  return response.data.data
-}
+const createTransaction = async (
+  data: z.infer<typeof transactionSchema> & { userId: number }
+): Promise<Transaction> => {
+  const response = await api.post(`/accounts/${data.accNo}/transactions`, data);
+  return response.data.data;
+};
 
 const fetchUPIs = async (accNo: string): Promise<UPI[]> => {
-  const response = await api.get(`/accounts/${accNo}/upi`)
-  return response.data.data
-}
+  const response = await api.get(`/accounts/${accNo}/upi`);
+  return response.data.data;
+};
 
 const fetchCards = async (accNo: string): Promise<Card[]> => {
-  const response = await api.get(`/accounts/${accNo}/card`)
-  return response.data.data
-}
+  const response = await api.get(`/accounts/${accNo}/card`);
+  return response.data.data;
+};
 
 export default function TransactionsPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const selectedAccount = searchParams.get("accNo")
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedAccount = searchParams.get("accNo");
   const setSelectedAccount = (accNo: string) => {
-    setSearchParams({ accNo })
-  }
+    setSearchParams({ accNo });
+  };
 
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const { toast } = useToast()
-  const { user } = useAuth()
-  const queryClient = useQueryClient()
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[], Error>({
-    queryKey: ['transactions', selectedAccount],
-    queryFn: () => selectedAccount ? fetchTransactions(selectedAccount) : Promise.reject("Account number is undefined"),
-    enabled: !!selectedAccount,
-  })
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const { data: accounts, isLoading: accountsLoading } = useQuery<BankAccount[], Error>({
-    queryKey: ['accounts', user?.id],
-    queryFn: () => user ? fetchAccounts(user.id) : Promise.reject("User ID is undefined"),
+  const { data: accounts, isLoading: accountsLoading } = useQuery<
+    BankAccount[],
+    Error
+  >({
+    queryKey: ["accounts", user?.id],
+    queryFn: () =>
+      user ? fetchAccounts(user.id) : Promise.reject("User ID is undefined"),
     enabled: !!user,
-  })
+  });
+
+  const { data: transactions, isLoading: transactionsLoading } = useQuery<
+    Transaction[],
+    Error
+  >({
+    queryKey: ["transactions", selectedAccount],
+    queryFn: () =>
+      selectedAccount
+        ? fetchTransactions(selectedAccount)
+        : Promise.reject("Account number is undefined"),
+    enabled: !!selectedAccount,
+  });
 
   const { data: upis } = useQuery<UPI[], Error>({
-    queryKey: ['upis', selectedAccount],
-    queryFn: () => selectedAccount ? fetchUPIs(selectedAccount) : Promise.reject("Account number is undefined"),
+    queryKey: ["upis", selectedAccount],
+    queryFn: () =>
+      selectedAccount
+        ? fetchUPIs(selectedAccount)
+        : Promise.reject("Account number is undefined"),
     enabled: !!selectedAccount,
-  })
+  });
 
   const { data: cards } = useQuery<Card[], Error>({
-    queryKey: ['cards', selectedAccount],
-    queryFn: () => selectedAccount ? fetchCards(selectedAccount) : Promise.reject("Account number is undefined"),
+    queryKey: ["cards", selectedAccount],
+    queryFn: () =>
+      selectedAccount
+        ? fetchCards(selectedAccount)
+        : Promise.reject("Account number is undefined"),
     enabled: !!selectedAccount,
-  })
-
-  useEffect(() => {
-    if (!selectedAccount && accounts?.length) {
-      setSearchParams({ accNo: accounts[0].accNo })
-    }
-  }, [selectedAccount, setSearchParams, accounts])
+  });
 
   const createTransactionMutation = useMutation({
-    mutationFn: (data: z.infer<typeof transactionSchema> & { userId: number }) => createTransaction(data),
+    mutationFn: (
+      data: z.infer<typeof transactionSchema> & { userId: number }
+    ) => createTransaction(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', selectedAccount] })
-      toast({ title: "Transaction created successfully" })
-      setIsAddDialogOpen(false)
+      queryClient.invalidateQueries({
+        queryKey: ["transactions", selectedAccount],
+      });
+      toast({ title: "Transaction created successfully" });
+      setIsAddDialogOpen(false);
     },
     onError: () => {
-      toast({ title: "Failed to create transaction", variant: "destructive" })
+      toast({ title: "Failed to create transaction", variant: "destructive" });
     },
-  })
+  });
 
   const transactionForm = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -182,29 +210,49 @@ export default function TransactionsPage() {
       transactionType: TransactionType.DEPOSIT,
       paymentMethod: PaymentMethod.ACCOUNT,
     },
-  })
+  });
+
+  useEffect(() => {
+    if (!selectedAccount && accounts?.length) {
+      setSearchParams({ accNo: accounts[0].accNo });
+    }
+  }, [selectedAccount, setSearchParams, accounts]);
 
   const handleCreateTransaction = (data: z.infer<typeof transactionSchema>) => {
     if (user) {
-      createTransactionMutation.mutate({ ...data, userId: user.id })
+      createTransactionMutation.mutate({ ...data, userId: user.id });
     }
-  }
+  };
 
-  if (transactionsLoading || accountsLoading) {
-    return <div>Loading...</div>
-  }
+  const activeAccounts = useMemo(
+    () => accounts?.filter((account) => account.status === "ACTIVE") || [],
+    [accounts]
+  );
 
-  const activeAccounts = accounts?.filter((account) => account.status === "ACTIVE") || []
+  const paginatedTransactions = useMemo(
+    () =>
+      transactions?.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+      ) || [],
+    [transactions, currentPage]
+  );
+
+  const totalPages = useMemo(
+    () => Math.ceil((transactions?.length || 0) / itemsPerPage),
+    [transactions]
+  );
+
+  if (accountsLoading || transactionsLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-6">Transactions</h1>
       <div className="mb-6">
         {selectedAccount && (
-          <Select
-            value={selectedAccount}
-            onValueChange={setSelectedAccount}
-          >
+          <Select value={selectedAccount} onValueChange={setSelectedAccount}>
             <SelectTrigger className="w-[300px]">
               <SelectValue placeholder="Select an account" />
             </SelectTrigger>
@@ -272,7 +320,13 @@ export default function TransactionsPage() {
                     <FormItem>
                       <FormLabel>Amount</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={(e) => field.onChange(Number.parseFloat(e.target.value))} />
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number.parseFloat(e.target.value))
+                          }
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -332,7 +386,8 @@ export default function TransactionsPage() {
                     </FormItem>
                   )}
                 />
-                {transactionForm.watch("paymentMethod") === PaymentMethod.UPI && (
+                {transactionForm.watch("paymentMethod") ===
+                  PaymentMethod.UPI && (
                   <FormField
                     control={transactionForm.control}
                     name="upiId"
@@ -361,7 +416,8 @@ export default function TransactionsPage() {
                     )}
                   />
                 )}
-                {transactionForm.watch("paymentMethod") === PaymentMethod.CARD && (
+                {transactionForm.watch("paymentMethod") ===
+                  PaymentMethod.CARD && (
                   <FormField
                     control={transactionForm.control}
                     name="byCardNo"
@@ -390,8 +446,13 @@ export default function TransactionsPage() {
                     )}
                   />
                 )}
-                <Button type="submit" disabled={createTransactionMutation.isPending}>
-                  {createTransactionMutation.isPending ? "Creating..." : "Create Transaction"}
+                <Button
+                  type="submit"
+                  disabled={createTransactionMutation.isPending}
+                >
+                  {createTransactionMutation.isPending
+                    ? "Creating..."
+                    : "Create Transaction"}
                 </Button>
               </form>
             </Form>
@@ -410,7 +471,7 @@ export default function TransactionsPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions?.map((transaction) => (
+          {paginatedTransactions.map((transaction) => (
             <TableRow key={transaction.transactionId}>
               <TableCell>{transaction.transactionId}</TableCell>
               <TableCell>
@@ -429,11 +490,53 @@ export default function TransactionsPage() {
               <TableCell>{transaction.amount.toFixed(2)}</TableCell>
               <TableCell>{transaction.transactionStatus}</TableCell>
               <TableCell>{transaction.paymentMethod}</TableCell>
-              <TableCell>{new Date(transaction.startedAt || '').toLocaleString()}</TableCell>
+              <TableCell>
+                {new Date(transaction.startedAt || "").toLocaleString()}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className={cn(
+                {
+                  "cursor-not-allowed opacity-60": currentPage === 1,
+                  "hover:cursor-pointer": currentPage > 1,
+                },
+                "bg-black dark:bg-slate-100 text-white dark:text-black hover:bg-black/80 dark:hover:bg-slate-100/80 hover:text-gray-100 dark:hover:text-gray-900"
+              )}
+            />
+          </PaginationItem>
+          {[...Array(totalPages)].map((_, i) => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                onClick={() => setCurrentPage(i + 1)}
+                isActive={currentPage === i + 1}
+              >
+                {i + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              className={cn(
+                {
+                  "cursor-not-allowed opacity-60": currentPage === totalPages,
+                  "hover:cursor-pointer": currentPage < totalPages,
+                },
+                "bg-black dark:bg-slate-100 text-white dark:text-black hover:bg-black/80 dark:hover:bg-slate-100/80 hover:text-gray-100 dark:hover:text-gray-900"
+              )}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
-  )
+  );
 }
