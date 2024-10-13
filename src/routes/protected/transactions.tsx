@@ -1,28 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { ArrowDownIcon, ArrowUpIcon, Plus } from "lucide-react";
-import { api } from "@/lib/axios";
+import { fetchAccounts, fetchCards } from "@/api/cards";
+import { createTransaction, fetchTransactions } from "@/api/transactions";
+import { fetchUPIs } from "@/api/upi";
+import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -38,9 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/components/AuthProvider";
-import type { BankAccount } from "@/types/account";
+import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -49,87 +27,35 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-// Enums
-enum TransactionType {
-  DEPOSIT = "DEPOSIT",
-  WITHDRAWAL = "WITHDRAWAL",
-}
-
-enum PaymentMethod {
-  UPI = "UPI",
-  CARD = "CARD",
-  ACCOUNT = "ACCOUNT",
-}
-
-enum TransactionStatus {
-  SUCCESS = "SUCCESS",
-  PENDING = "PENDING",
-  FAILED = "FAILED",
-}
-
-// Interfaces
-interface Transaction {
-  transactionId: number;
-  accNo: string;
-  userId: number;
-  amount: number;
-  transactionType: TransactionType;
-  transactionStatus: TransactionStatus;
-  byCardNo: string | null;
-  upiId: string | null;
-  startedAt: string | null;
-  endedAt: string | null;
-  referenceId: string | null;
-  paymentMethod: PaymentMethod;
-}
-
-interface UPI {
-  upiId: string;
-}
-
-interface Card {
-  cardNo: string;
-}
-
-// Schemas
-const transactionSchema = z.object({
-  accNo: z.string().min(1, "Account number is required"),
-  amount: z.number().positive("Amount must be positive"),
-  transactionType: z.nativeEnum(TransactionType),
-  paymentMethod: z.nativeEnum(PaymentMethod),
-  upiId: z.string().optional(),
-  byCardNo: z.string().optional(),
-});
-
-// API functions
-const fetchTransactions = async (accNo: string): Promise<Transaction[]> => {
-  const response = await api.get(`/accounts/${accNo}/transactions`);
-  return response.data.data;
-};
-
-const fetchAccounts = async (userId: number): Promise<BankAccount[]> => {
-  const response = await api.get(`/users/${userId}/accounts`);
-  return response.data.data;
-};
-
-const createTransaction = async (
-  data: z.infer<typeof transactionSchema> & { userId: number }
-): Promise<Transaction> => {
-  const response = await api.post(`/accounts/${data.accNo}/transactions`, data);
-  return response.data.data;
-};
-
-const fetchUPIs = async (accNo: string): Promise<UPI[]> => {
-  const response = await api.get(`/accounts/${accNo}/upi`);
-  return response.data.data;
-};
-
-const fetchCards = async (accNo: string): Promise<Card[]> => {
-  const response = await api.get(`/accounts/${accNo}/card`);
-  return response.data.data;
-};
+import { transactionSchema } from "@/schema/transaction";
+import type { BankAccount } from "@/types/account";
+import type { Card } from "@/types/card";
+import { PaymentMethod, type Transaction, TransactionType } from "@/types/transaction";
+import type { UPI } from "@/types/upi";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowDownIcon, ArrowUpIcon, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
+import type * as z from "zod";
 
 export default function TransactionsPage() {
   const [searchParams, setSearchParams] = useSearchParams();

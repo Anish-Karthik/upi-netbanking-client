@@ -1,3 +1,5 @@
+import { fetchAccounts } from "@/api/cards";
+import { addUPI, changeUPIPin, closeUPI, fetchUPIs, toggleDefaultUPI, updateUPIStatus } from "@/api/upi";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,106 +34,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/axios";
+import { addUpiSchema, changePinSchema, editStatusSchema } from "@/schema/upi";
 import type { BankAccount } from "@/types/account";
+import { type UPI, UpiStatus } from "@/types/upi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Plus, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { useParams, useSearchParams } from "react-router-dom";
-import * as z from "zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useSearchParams } from "react-router-dom";
+import type * as z from "zod";
 
-// Enums
-enum UpiStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-  CLOSED = "CLOSED",
-}
-
-// Interfaces
-interface UPI {
-  upiId: string;
-  accNo: string;
-  userId: number;
-  status: UpiStatus;
-  isDefault: boolean;
-}
-
-// Schemas
-const addUpiSchema = z.object({
-  accNo: z.string().min(1, "Account number is required"),
-  upiPin: z.string().min(4, "UPI PIN must be at least 4 characters"),
-});
-
-const editStatusSchema = z.object({
-  status: z.nativeEnum(UpiStatus),
-});
-
-const changePinSchema = z.object({
-  oldPin: z.string().min(4, "Old PIN must be at least 4 characters"),
-  newPin: z.string().min(4, "New PIN must be at least 4 characters"),
-});
-
-// API functions
-const fetchUPIs = async (accNo: string): Promise<UPI[]> => {
-  const response = await api.get(`/accounts/${accNo}/upi`);
-  return response.data.data;
-};
-
-const fetchAccounts = async (userId: number): Promise<BankAccount[]> => {
-  const response = await api.get(`/users/${userId}/accounts`);
-  return response.data.data;
-};
-
-const addUPI = async (
-  accNo: string,
-  data: z.infer<typeof addUpiSchema> & { userId: number }
-): Promise<UPI> => {
-  const response = await api.post(`/accounts/${accNo}/upi`, data);
-  return response.data.data;
-};
-
-const updateUPIStatus = async (
-  accNo: string,
-  upiId: string,
-  status: UpiStatus
-): Promise<UPI> => {
-  const response = await api.put(`/accounts/${accNo}/upi/${upiId}/status`, {
-    status,
-  });
-  return response.data.data;
-};
-
-const changeUPIPin = async (
-  accNo: string,
-  upiId: string,
-  data: z.infer<typeof changePinSchema>
-): Promise<UPI> => {
-  const response = await api.put(`/accounts/${accNo}/upi/${upiId}/pin`, data);
-  return response.data.data;
-};
-
-const toggleDefaultUPI = async (accNo: string, upiId: string): Promise<UPI> => {
-  const response = await api.put(`/accounts/${accNo}/upi/${upiId}/default`, {
-    isDefault: true,
-  });
-  return response.data.data;
-};
-
-const closeUPI = async (accNo: string, upiId: string): Promise<void> => {
-  await api.delete(`/accounts/${accNo}/upi/${upiId}`);
-};
 
 export default function UpiPage() {
   // get from search params
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedAccount = searchParams.get("accNo");
-  console.log(selectedAccount);
   const setSelectedAccount = (accNo: string) => {
     setSearchParams({ accNo });
   };
-  console.log("selected acc", selectedAccount);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditStatusDialogOpen, setIsEditStatusDialogOpen] = useState(false);
   const [isChangePinDialogOpen, setIsChangePinDialogOpen] = useState(false);

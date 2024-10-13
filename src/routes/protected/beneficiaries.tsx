@@ -1,3 +1,4 @@
+import { createBeneficiary, fetchBeneficiaries } from "@/api/beneficiaries"
 import { useAuth } from "@/components/AuthProvider"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,41 +27,15 @@ import {
 } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { api } from '@/lib/axios'
+import { beneficiarySchema } from "@/schema/beneficiary"
+import type { Beneficiary } from "@/types/beneficiary"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Edit, Plus, Trash2 } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
+import type * as z from 'zod'
 
-interface Beneficiary {
-  id: number
-  name: string
-  accNo: string
-  beneficiaryOfUserId: number
-  description: string
-  upiId: string | null
-}
-
-const beneficiarySchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  accNo: z.string().min(1, "Account number is required"),
-  description: z.string().optional(),
-  upiId: z.string().optional().nullable(),
-})
-
-const fetchBeneficiaries = async (userId: number): Promise<Beneficiary[]> => {
-  const response = await api.get(`/users/${userId}/beneficiaries`)
-  return response.data.data
-}
-
-const createBeneficiary = async (userId: number, data: z.infer<typeof beneficiarySchema>): Promise<Beneficiary> => {
-  const response = await api.post(`/users/${userId}/beneficiaries`, {
-    ...data,
-    beneficiaryOfUserId: userId,
-  })
-  return response.data.data
-}
 
 export default function BeneficiariesPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
