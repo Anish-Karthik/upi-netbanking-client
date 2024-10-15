@@ -12,8 +12,11 @@ import {
   User2,
   type LucideIcon,
   Coins,
+  LogOut,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
+import { logout } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
 
 interface SideBarProps {
   isOpen: boolean;
@@ -38,9 +41,10 @@ const routes: Route[] = [
   { name: "Settings", path: "/settings", icon: Settings },
 ];
 export const SideBar: React.FC<SideBarProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate()
   return (
     <aside
-      className={`bg-primary text-primary-foreground w-64 min-h-screen p-4 ${
+      className={`relative bg-primary text-primary-foreground w-64 min-h-screen p-4 ${
         isOpen ? "block" : "hidden"
       } md:block`}
     >
@@ -56,7 +60,7 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, onClose }) => {
         </Button>
       </div>
       <div className="h-full bg-primary text-primary-foreground">
-        <ScrollArea className="h-[calc(100vh-4rem)] pb-10">
+        <ScrollArea className="h-[calc(100vh-10rem)] pb-10">
           <nav className="space-y-2 px-2">
             {routes.map((route) => (
               <a
@@ -70,6 +74,19 @@ export const SideBar: React.FC<SideBarProps> = ({ isOpen, onClose }) => {
             ))}
           </nav>
         </ScrollArea>
+      </div>
+      <div className="absolute inset-x-2 bottom-2">
+        <Button
+          onClick={async() => {
+            await logout()
+            navigate("/")
+          }}
+          variant={"secondary"}
+          className="w-full flex items-center justify-start gap-2"
+        >
+          <LogOut />
+          <p className="max-sm:hidden">Logout</p>
+        </Button>
       </div>
     </aside>
   );
