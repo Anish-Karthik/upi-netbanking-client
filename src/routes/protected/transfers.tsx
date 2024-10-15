@@ -1,6 +1,6 @@
 import { fetchTransfers } from '@/api/transfers';
 import { useAuth } from "@/components/AuthProvider";
-import { TransferForm } from '@/components/transfers/TransferForm';
+import TransferForm from '@/components/transfers/TransferForm';
 import { TransferPagination } from '@/components/transfers/TransferPagination';
 import { TransferTable } from '@/components/transfers/TransferTable';
 import { Button } from "@/components/ui/button";

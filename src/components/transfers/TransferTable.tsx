@@ -14,6 +14,7 @@ interface TransferTableProps {
 }
 
 export const TransferTable: React.FC<TransferTableProps> = ({ transfers }) => {
+  const sortedTransfers = transfers.sort((a,b) => b.startedAt-a.startedAt)
   return (
     <Table>
       <TableHeader>
@@ -27,7 +28,7 @@ export const TransferTable: React.FC<TransferTableProps> = ({ transfers }) => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {transfers.map((transfer) => (
+        {sortedTransfers.map((transfer) => (
           <TableRow key={transfer.referenceId}>
             <TableCell>{transfer.referenceId}</TableCell>
             <TableCell>{transfer.payerTransaction.accNo || transfer.payerTransaction.upiId || transfer.payerTransaction.byCardNo}</TableCell>
