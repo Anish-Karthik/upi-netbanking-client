@@ -47,7 +47,11 @@ import { cn } from "@/lib/utils";
 import { transactionSchema } from "@/schema/transaction";
 import type { BankAccount } from "@/types/account";
 import type { Card } from "@/types/card";
-import { PaymentMethod, type Transaction, TransactionType } from "@/types/transaction";
+import {
+  PaymentMethod,
+  type Transaction,
+  TransactionType,
+} from "@/types/transaction";
 import type { UPI } from "@/types/upi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -157,7 +161,7 @@ export default function TransactionsPage() {
 
   const paginatedTransactions = useMemo(
     () =>
-      transactions?.slice(
+      transactions?.sort((a, b) => Number(b.startedAt ?? 0) - Number(a.startedAt ?? 0)).slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
       ) || [],
@@ -372,6 +376,24 @@ export default function TransactionsPage() {
                     )}
                   />
                 )}
+                <div className="flex gap-1 items-end">
+                  <FormField
+                    control={transactionForm.control}
+                    name="pin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PIN</FormLabel>
+                        <FormControl>
+                          <Input type="password" minLength={4} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {/* <Button type="button" onClick={() => verifyPin(pin)}>
+                  Verify
+                </Button> */}
+                </div>
                 <Button
                   type="submit"
                   disabled={createTransactionMutation.isPending}
@@ -397,30 +419,31 @@ export default function TransactionsPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedTransactions.map((transaction) => (
-            <TableRow key={transaction.transactionId}>
-              <TableCell>{transaction.transactionId}</TableCell>
-              <TableCell>
-                {transaction.transactionType === TransactionType.DEPOSIT ? (
-                  <span className="flex items-center text-green-600">
-                    <ArrowDownIcon className="mr-1 h-4 w-4" />
-                    Deposit
-                  </span>
-                ) : (
-                  <span className="flex items-center text-red-600">
-                    <ArrowUpIcon className="mr-1 h-4 w-4" />
-                    Withdrawal
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>{transaction.amount.toFixed(2)}</TableCell>
-              <TableCell>{transaction.transactionStatus}</TableCell>
-              <TableCell>{transaction.paymentMethod}</TableCell>
-              <TableCell>
-                {new Date(transaction.startedAt || "").toLocaleString()}
-              </TableCell>
-            </TableRow>
-          ))}
+          {paginatedTransactions
+            .map((transaction) => (
+              <TableRow key={transaction.transactionId}>
+                <TableCell>{transaction.transactionId}</TableCell>
+                <TableCell>
+                  {transaction.transactionType === TransactionType.DEPOSIT ? (
+                    <span className="flex items-center text-green-600">
+                      <ArrowDownIcon className="mr-1 h-4 w-4" />
+                      Deposit
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-red-600">
+                      <ArrowUpIcon className="mr-1 h-4 w-4" />
+                      Withdrawal
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>{transaction.amount.toFixed(2)}</TableCell>
+                <TableCell>{transaction.transactionStatus}</TableCell>
+                <TableCell>{transaction.paymentMethod}</TableCell>
+                <TableCell>
+                  {new Date(transaction.startedAt || "").toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
       <Pagination className="mt-4">

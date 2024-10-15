@@ -8,4 +8,5 @@ export const transactionSchema = z.object({
   paymentMethod: z.nativeEnum(PaymentMethod),
   upiId: z.string().optional(),
   byCardNo: z.string().optional(),
+  pin: z.string().min(4, "PIN must be atleast 4 digits"),
 });

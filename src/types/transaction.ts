@@ -26,7 +26,7 @@ export interface Transaction {
   transactionStatus: TransactionStatus;
   byCardNo: string | null;
   upiId: string | null;
-  startedAt: string | null;
+  startedAt: string;
   endedAt: string | null;
   referenceId: string | null;
   paymentMethod: PaymentMethod;
