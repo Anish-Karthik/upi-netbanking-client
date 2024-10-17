@@ -2,6 +2,7 @@ import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bell, User, Search, Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -33,9 +34,11 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
+          <Link to={"/profile"}>
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

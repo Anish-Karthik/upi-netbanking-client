@@ -28,7 +28,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { fetchBeneficiaries } from "../beneficiaries";
+import { fetchBeneficiaries } from "@/api/beneficiaries";
 // import { verifyPin, deactivatePaymentMethod } from '@/api/payment';
 
 const verifyPin = async (pin: string): Promise<boolean> => {

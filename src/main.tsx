@@ -21,6 +21,7 @@ import HomeLayoutPage from "./routes/protected/home-layout";
 import Profile from "./routes/protected/profile";
 import Settings from "./routes/protected/settings";
 import Transactions from "./routes/protected/transactions";
+import SearchPage from "./routes/protected/search";
 import Upi from "./routes/protected/upi";
 import { Toaster as ToastProvider } from './components/ui/toaster';
 import Transfers from './routes/protected/transfers';
@@ -56,6 +57,11 @@ const router = createBrowserRouter([
       {
         path: "/dashboard",
         element: <Dashboard />,
+        errorElement: <ErrorPage />,
+      },
+      {
+        path: "/search",
+        element: <SearchPage />,
         errorElement: <ErrorPage />,
       },
       {

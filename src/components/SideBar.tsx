@@ -13,6 +13,7 @@ import {
   type LucideIcon,
   Coins,
   LogOut,
+  Search,
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { logout } from "@/lib/auth";
@@ -31,6 +32,7 @@ interface Route {
 
 const routes: Route[] = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { name: "Search", path: "/search", icon: Search },
   { name: "Beneficiaries", path: "/beneficiaries", icon: Users },
   { name: "Accounts", path: "/accounts", icon: Bank },
   { name: "Transactions", path: "/transactions", icon: Repeat },
